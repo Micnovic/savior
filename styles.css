@@ -1,0 +1,105 @@
+body
+{
+    background-color: rgb(186, 183, 172);
+    font: 20px 'Roboto', sans-serif;
+    color: rgb(66, 66, 65);
+}
+
+h1
+{
+    font-size: 50pt;
+    color: rgb(255,255,255);
+    text-align: center;
+    text-shadow: 2px 2px rgb(136, 133, 123);
+}
+
+#buttons
+{
+    text-align: center;
+}
+
+
+.button
+{
+    background-color: rgb(230, 227, 218);
+    font-size: 16pt;
+    padding: 10pt;
+    margin: 5pt;
+    width: 100%;
+}
+
+.button:active
+{
+    background-color: rgb(177, 175, 166);
+    color: rgb(255, 255, 255);
+}
+
+.active
+{
+    background-color: rgb(177, 175, 166);
+    color: rgb(255, 255, 255);
+}
+
+.turn-button
+{
+    background-color: rgb(129, 126, 118);
+    font-size: 16pt;
+    color: rgb(255,255,255);
+    padding: 10pt;
+    margin: 5pt;
+    width: 100%;
+}
+
+.turn-button:active
+{
+    background-color: rgb(92, 89, 83);
+    color: rgb(255, 255, 255);
+}
+
+#console
+{
+    width: 100%;
+    background-color: rgb(219, 218, 209);
+    margin: auto;
+    font-size: 12pt;
+}
+
+#intepreter-message
+{
+    padding-top: 25pt;
+    padding-left: 25pt;
+    padding-right: 25pt;
+}
+
+#game-message
+{
+    font-style: italic;
+    padding-left: 25pt;
+    padding-right: 25pt;
+    padding-bottom: 25pt;
+    color: rgb(159, 157, 145);
+}
+
+footer
+{
+    font-size: 8pt;
+    text-align: center;
+}
+
+@media only screen and (min-width: 768px)
+{
+    .button
+    {
+        width: 40%;
+    }
+
+    .turn-button
+    {
+        width: 40%;
+    }
+
+    #console
+    {
+        width: 40%;
+    }
+}
