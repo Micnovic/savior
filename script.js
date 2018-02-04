@@ -1,20 +1,28 @@
-var rooms = [];
-var buttons = document.getElementsByClassName("button");
+//var rooms = [];
+var rooms = {};
+var buttons;
 var gc;
 var eventMachine;
 var interpreterMessage;
 
 //порядок добавления комнат в список должен совпадать с порядком на сайте
 window.onload = function() {
-    rooms.push(new Room("canteen"));
-    rooms.push(new Room("bridge"));
-    rooms.push(new Room("serverRoom"));
+    buttons = document.getElementsByClassName("button");
+    // rooms.push(new Room("canteen"));
+    // rooms.push(new Room("bridge"));
+    // rooms.push(new Room("serverRoom"));
+    // rooms.push(new Room("terminal"));
+    rooms.canteen = new Room("canteen");
+    rooms.bridge = new Room("bridge");
+    rooms.serverRoom = new Room("serverRoom");
+    rooms.terminal = new Room("terminal");
+
     gc = new GameController();
     eventMachine = new EventMachine();
     interpreterMessage = document.getElementById("intepreter-message");
-    var currentMission = Math.floor(Math.random() * missions.length);
+    gc.currentMission = Math.floor(Math.random() * missions.length);
     interpreterMessage.innerHTML += "Статус гибернации... разморозка завершена<br>Статус жизнеспособности экипажа... в норме<br> Статус жизнеспособности ковчега... в норме <br>Проверка систем корабля... в норме <br> Проверка входящих сообщений... Есть одно сообщение для экипажа: <br><br>";
-    interpreterMessage.innerHTML += missions[currentMission];
+    interpreterMessage.innerHTML += missions[gc.currentMission];
     interpreterMessage.innerHTML += "Пожалуйста, займите свои посты."
 }
 
@@ -32,8 +40,10 @@ class GameController {
     constructor(){
         this.difficulty = 0;
         this.turnNumber = 0;
+        this.currentMission;
 
-        this.coffee = 0;
+        this.heat = 0;
+        //this.coffee = 0;
     }
 }
 
@@ -60,8 +70,8 @@ class EventMachine {
 
         //здесь идут события
         this.canteen();
-        this.alert();
         this.mission();
+        this.terminal();
 
         //завершающий этап
         gc.turnNumber++;
@@ -69,25 +79,41 @@ class EventMachine {
         interpreterMessage.innerHTML = this.message;
     }
     canteen(){
-        if(rooms[0].active){
-            if(d100() > 20){
-                this.message += "В столовой приготовлено кофе. <br><br>";
-                gc.coffee++;
-            }
+        if(rooms[0].active == true){
+            // if(d100() > 50){
+            //     this.message += "В столовой приготовлено кофе. <br><br>";
+            //     gc.coffee++;
+            // }
         }
     }
 
-    alert(){
-        this.message += "alert <br><br>";
+    mission(){
+        //this.message += "mission <br><br>";
     }
 
-    mission(){
-        this.message += "mission <br><br>";
+    terminal()
+    {
+        if (isRoomActive("terminal")){
+            console.log('wow');
+            this.message += "В терминале есть человек";
+        }
     }
 }
 
 function d100(){
     return Math.floor(Math.random() * 100);
+}
+
+function isRoomActive(roomName){
+    var isActive = false;
+    for (var i = 0; i < buttons.length; i++)
+    {
+        if(rooms[i].name == roomName && rooms[i].active == true)
+        {
+            isActive = true;
+        }
+    }
+    return isActive;
 }
 
 function buttonClick(i){
@@ -104,10 +130,11 @@ function buttonClick(i){
 }
 
 function turn() {
+    eventMachine.turn();
+
     for (var i = 0; i < buttons.length; i++)
     {
+        rooms[i].active = false;
         buttons[i].className = "button";
     }
-
-    eventMachine.turn();
 }
