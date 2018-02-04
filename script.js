@@ -13,10 +13,16 @@ window.onload = function() {
     rooms.bridge = new Room();
     rooms.serverRoom = new Room();
     rooms.terminal = new Room();
+    rooms.pilot = new Room();
+    rooms.astroCenter = new Room();
+    rooms.navCenter = new Room();
     roomsOrdered.push(rooms.canteen);
     roomsOrdered.push(rooms.bridge);
     roomsOrdered.push(rooms.serverRoom);
     roomsOrdered.push(rooms.terminal);
+    roomsOrdered.push(rooms.pilot);
+    roomsOrdered.push(rooms.astroCenter);
+    roomsOrdered.push(rooms.navCenter);
 
     gc = new GameController();
     eventMachine = new EventMachine();
@@ -43,6 +49,12 @@ class GameController {
         this.currentMission;
 
         this.heat = 0;
+        this.course = false;
+        this.distanceToPlanet = 20;
+
+        this.astroData = 0;
+        this.planetFound = false;
+        this.courseProgress = 0;
         //this.coffee = 0;
     }
 }
@@ -56,7 +68,7 @@ class EventMachine {
         //setting difficulty on a first turn
         if(gc.turnNumber == 0){
             var difficulty = 0;
-            for (var i = 0; i < rooms.length; i++)
+            for (var i = 0; i < roomsOrdered.length; i++)
             {
                 if (roomsOrdered[i].active == true){
                     difficulty++;
@@ -64,15 +76,19 @@ class EventMachine {
             }
             gc.difficulty = difficulty;
             console.log("Difficulty has been set to " + difficulty)
+
+            //change parameters according to Difficulty
+            gc.distanceToPlanet += gc.difficulty;
         }
+
         //начальный этап
         this.message = "";
 
         //здесь идут события
 
         //накопление тепла
-        if (d100()>95){
-            gc.heat += 5;
+        if (d100()>=95){
+            gc.heat += 2+gc.difficulty;
         }
         if (gc.heat >= 15){
             if (rooms.terminal.active == false){
@@ -84,6 +100,9 @@ class EventMachine {
         //комнаты
         this.canteen();
         this.terminal();
+        this.pilot();
+        this.astroCenter();
+        this.navCenter();
 
         this.mission();
 
@@ -110,6 +129,46 @@ class EventMachine {
                 this.message += "Произведена отладка охладителя <br><br>";
             } else {
                 this.message += "Произведена отладка охладителя. Системы в норме <br><br>";
+            }
+        }
+    }
+
+    pilot()
+    {
+        if (rooms.pilot.active && gc.course == true){
+            gc.distanceToPlanet--;
+            this.message += "Корабль пилотируется в сторону планеты <br><br>";
+            gc.heat++;
+        }
+        else if (rooms.pilot.active && gc.course == false){
+            this.message += "Вы не можете пилотировать корабль, потому что курс не проложен <br><br>";
+        }
+    }
+
+    astroCenter(){
+        if(rooms.astroCenter.active && d100()>=95 && gc.currentMission == 0){
+            this.message += "Производен сбор навигационных данных с помощью дронов. Обнаружена планета. Вы можете проложить курс <br><br>";
+            gc.planetFound = true;
+        }
+        else if(rooms.astroCenter.active && d100()>=65){
+            var anomalies = ["газовое облако", "скопление астероидов", "реликтовое излучение"];
+            this.message += "Производен сбор навигационных данных с помощью дронов. Обнаружено " + anomalies[Math.floor(Math.random() * anomalies.length)] + " <br><br>";
+            gc.astroData++;
+        }
+        else if (rooms.astroCenter.active){
+            this.message += "Производится сбор навигационных данных с помощью дронов. Новой информации не обнаружено <br><br>";
+        }
+    }
+
+    navCenter(){
+        if(rooms.navCenter.active && gc.planetFound == true && gc.courseProgress >= 10){
+            this.message += "Курс к планете проложен <br><br>";
+            gc.course = true;
+        }
+        else if (rooms.navCenter.active && gc.planetFound == true){
+            this.message += "Прокладывается курс к планете <br><br>";
+            if(d100() >= 70 + gc.difficulty*1.5){
+                gc.courseProgress++;
             }
         }
     }
