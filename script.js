@@ -1,20 +1,29 @@
-var rooms = [];
-var buttons = document.getElementsByClassName("button");
+//var rooms = [];
+var rooms = {};
+var roomsOrdered = [];
+var buttons;
 var gc;
 var eventMachine;
 var interpreterMessage;
 
-//порядок добавления комнат в список должен совпадать с порядком на сайте
+//порядок добавления комнат в список roomsOrdered должен совпадать с порядком на сайте
 window.onload = function() {
-    rooms.push(new Room("canteen"));
-    rooms.push(new Room("bridge"));
-    rooms.push(new Room("serverRoom"));
+    buttons = document.getElementsByClassName("button");
+    rooms.canteen = new Room();
+    rooms.bridge = new Room();
+    rooms.serverRoom = new Room();
+    rooms.terminal = new Room();
+    roomsOrdered.push(rooms.canteen);
+    roomsOrdered.push(rooms.bridge);
+    roomsOrdered.push(rooms.serverRoom);
+    roomsOrdered.push(rooms.terminal);
+
     gc = new GameController();
     eventMachine = new EventMachine();
     interpreterMessage = document.getElementById("intepreter-message");
-    var currentMission = Math.floor(Math.random() * missions.length);
+    gc.currentMission = Math.floor(Math.random() * missions.length);
     interpreterMessage.innerHTML += "Статус гибернации... разморозка завершена<br>Статус жизнеспособности экипажа... в норме<br> Статус жизнеспособности ковчега... в норме <br>Проверка систем корабля... в норме <br> Проверка входящих сообщений... Есть одно сообщение для экипажа: <br><br>";
-    interpreterMessage.innerHTML += missions[currentMission];
+    interpreterMessage.innerHTML += missions[gc.currentMission];
     interpreterMessage.innerHTML += "Пожалуйста, займите свои посты."
 }
 
@@ -22,8 +31,7 @@ var missions = [];
 missions[0] = "Доброе утро, экипаж. Вынужден разбудить вас, так как последняя разведка дронами доложила, что планета ZX3282, выбранная как текущий курс назначения, не удовлетворяет требованиям для колонизации. Через 115 лет ожидаются значительные сдвиги коры поверхности и вулканические извержения. Интерпретатор рекомендует экипажу надзора немедленно начать поиск другой подходящей планеты в Астрономическом центре, а затем совершить расчет маршрута в Навигационном центре. <br><br>";
 
 class Room {
-    constructor(name){
-        this.name = name;
+    constructor(){
         this.active = false;
     }
 }
@@ -32,8 +40,10 @@ class GameController {
     constructor(){
         this.difficulty = 0;
         this.turnNumber = 0;
+        this.currentMission;
 
-        this.coffee = 0;
+        this.heat = 0;
+        //this.coffee = 0;
     }
 }
 
@@ -48,7 +58,7 @@ class EventMachine {
             var difficulty = 0;
             for (var i = 0; i < rooms.length; i++)
             {
-                if (rooms[i].active == true){
+                if (roomsOrdered[i].active == true){
                     difficulty++;
                 }
             }
@@ -59,8 +69,22 @@ class EventMachine {
         this.message = "";
 
         //здесь идут события
+
+        //накопление тепла
+        if (d100()>95){
+            gc.heat += 5;
+        }
+        if (gc.heat >= 15){
+            if (rooms.terminal.active == false){
+                this.message += "Перегрев системы охлаждения корабля. Произведите ручную отладку в Терминале охладителя <br><br>";
+            }
+        }
+
+
+        //комнаты
         this.canteen();
-        this.alert();
+        this.terminal();
+
         this.mission();
 
         //завершающий этап
@@ -69,20 +93,25 @@ class EventMachine {
         interpreterMessage.innerHTML = this.message;
     }
     canteen(){
-        if(rooms[0].active){
-            if(d100() > 20){
-                this.message += "В столовой приготовлено кофе. <br><br>";
-                gc.coffee++;
-            }
-        }
-    }
 
-    alert(){
-        this.message += "alert <br><br>";
     }
 
     mission(){
-        this.message += "mission <br><br>";
+        //this.message += "mission <br><br>";
+    }
+
+    terminal()
+    {
+        if (rooms.terminal.active){
+            gc.heat = Math.floor(gc.heat * 0.75);
+            if (gc.heat >= 15) {
+                this.message += "Производится отладка охладителя <br><br>";
+            } else if (gc.heat >= 10){
+                this.message += "Произведена отладка охладителя <br><br>";
+            } else {
+                this.message += "Произведена отладка охладителя. Системы в норме <br><br>";
+            }
+        }
     }
 }
 
@@ -94,20 +123,21 @@ function buttonClick(i){
     if (buttons[i].className == "button")
     {
         buttons[i].className += " active";
-        rooms[i].active = true;
+        roomsOrdered[i].active = true;
     }
     else
     {
         buttons[i].className = "button";
-        rooms[i].active = false;
+        roomsOrdered[i].active = false;
     }
 }
 
 function turn() {
+    eventMachine.turn();
+
     for (var i = 0; i < buttons.length; i++)
     {
+        roomsOrdered[i].active = false;
         buttons[i].className = "button";
     }
-
-    eventMachine.turn();
 }
