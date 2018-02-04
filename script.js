@@ -55,7 +55,6 @@ class GameController {
         this.astroData = 0;
         this.planetFound = false;
         this.courseProgress = 0;
-        //this.coffee = 0;
     }
 }
 
@@ -100,9 +99,9 @@ class EventMachine {
         //комнаты
         this.canteen();
         this.terminal();
-        this.pilot();
         this.astroCenter();
         this.navCenter();
+        this.pilot();
 
         this.mission();
 
@@ -111,8 +110,12 @@ class EventMachine {
         console.log("Turn " + gc.turnNumber);
         interpreterMessage.innerHTML = this.message;
     }
-    canteen(){
 
+    canteen(){
+        if (rooms.canteen.active && d100() >= 40+gc.difficulty*2){
+            this.message += "В столовой приготовлено кофе. Моральный дух всех членов экипажа повышен<br><br>";
+            gc.heat++;
+        }
     }
 
     mission(){
@@ -149,6 +152,7 @@ class EventMachine {
         if(rooms.astroCenter.active && d100()>=95 && gc.currentMission == 0){
             this.message += "Производен сбор навигационных данных с помощью дронов. Обнаружена планета. Вы можете проложить курс <br><br>";
             gc.planetFound = true;
+            gc.astroData+=5;
         }
         else if(rooms.astroCenter.active && d100()>=65){
             var anomalies = ["газовое облако", "скопление астероидов", "реликтовое излучение"];
@@ -161,15 +165,26 @@ class EventMachine {
     }
 
     navCenter(){
-        if(rooms.navCenter.active && gc.planetFound == true && gc.courseProgress >= 10){
+        if(rooms.navCenter.active && gc.planetFound == true && gc.courseProgress >= 5){
             this.message += "Курс к планете проложен <br><br>";
             gc.course = true;
         }
         else if (rooms.navCenter.active && gc.planetFound == true){
             this.message += "Прокладывается курс к планете <br><br>";
-            if(d100() >= 70 + gc.difficulty*1.5){
+            if(d100() >= 50 + gc.difficulty*1.5){
                 gc.courseProgress++;
             }
+        }
+
+        if (rooms.navCenter.active && gc.astroData > 0 && d100()+gc.astroData*2 > 50 + gc.difficulty*2){
+            this.message += "Благодаря полученной информации, глобальная база знаний пополена <br><br>";
+            gc.astroData--;
+        }
+        else if (rooms.navCenter.active && gc.astroData > 0){
+            this.message += "Производится пополнение глобальной базы знаний <br><br>";
+        }
+        else if (rooms.navCenter.active){
+            this.message += "В навигационном центре недостатчно информации, чтобы заняться разработкой <br><br>";
         }
     }
 }
